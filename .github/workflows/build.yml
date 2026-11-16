@@ -32,7 +32,7 @@ jobs:
 
       - name: Fix Java compatibility
         run: |
-          cat > jvm-fix.gradle <<'EOF'
+          cat > "$GITHUB_WORKSPACE/jvm-fix.gradle" <<'EOF'
           allprojects {
             tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
               sourceCompatibility = '17'
@@ -43,7 +43,7 @@ jobs:
 
       - name: Build APK
         run: |
-          gradle --no-daemon -I jvm-fix.gradle -p "$PROJECT_DIR" assembleDebug
+          gradle --no-daemon -I "$GITHUB_WORKSPACE/jvm-fix.gradle" -p "$PROJECT_DIR" assembleDebug
 
       - uses: actions/upload-artifact@v4
         with:
