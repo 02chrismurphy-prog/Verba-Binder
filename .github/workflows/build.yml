@@ -19,6 +19,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
       - name: Extract project
         run: |
           mkdir extracted
@@ -26,12 +30,24 @@ jobs:
           PROJECT_DIR=$(dirname "$(find extracted -name settings.gradle -o -name settings.gradle.kts | head -n 1)")
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
 
+      - name: Fix Java compatibility
+        run: |
+          cat > jvm-fix.gradle <<'EOF'
+          allprojects {
+            tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
+              sourceCompatibility = '17'
+              targetCompatibility = '17'
+            }
+          }
+          EOF
+
       - name: Build APK
         run: |
-          gradle --no-daemon -p "$PROJECT_DIR" assembleDebug
+          gradle --no-daemon -I jvm-fix.gradle -p "$PROJECT_DIR" assembleDebug
 
       - uses: actions/upload-artifact@v4
         with:
           name: Verba-Binder-APK
           path: '**/app-debug.apk'
+          if-no-files-found: error
           
