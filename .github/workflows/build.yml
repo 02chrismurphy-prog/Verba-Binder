@@ -30,16 +30,27 @@ jobs:
           PROJECT_DIR=$(dirname "$(find extracted -name settings.gradle -o -name settings.gradle.kts | head -n 1)")
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
 
-      - name: Fix Java compatibility
+      - name: Исправлена несовместимость с Java
         run: |
           cat > "$GITHUB_WORKSPACE/jvm-fix.gradle" <<'EOF'
           allprojects {
-            tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
-              sourceCompatibility = '17'
-              targetCompatibility = '17'
-            }
+              afterEvaluate {
+                  tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
+                      sourceCompatibility = '17'
+                      targetCompatibility = '17'
+                  }
+
+                  tasks.configureEach { task ->
+                      if (task.name.toLowerCase().contains('kotlin')) {
+                          if (task.hasProperty('kotlinOptions')) {
+                              task.kotlinOptions.jvmTarget = '17'
+                          }
+                      }
+                  }
+              }
           }
           EOF
+          
 
       - name: Build APK
         run: |
